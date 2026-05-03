@@ -363,5 +363,5 @@ Na prática, prefira começar por:
 
 Depois dos logs funcionando, podemos criar guias específicos para os próximos pilares:
 
-- `aplicacao-go-metricas.md`
-- `aplicacao-go-traces.md`
+- `../metrics/aplicacao-go-metricas.md`
+- `../traces/aplicacao-go-traces.md`

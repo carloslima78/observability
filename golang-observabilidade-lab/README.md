@@ -110,8 +110,17 @@ Aplicação
 
 ## Guias Práticos
 
-- [Infraestrutura de Logs](docs/infraestrutura-logs.md)
-- [Aplicação app-observability-lab: Logs](docs/aplicacao-go-logs.md)
-- [Infraestrutura de Métricas](docs/infraestrutura-metricas.md)
-- [Aplicação app-observability-lab: Métricas](docs/aplicacao-go-metricas.md)
-- [Aplicação app-observability-lab: Tracing](docs/aplicacao-go-traces.md)
+### Logs
+
+- [Infraestrutura de Logs](docs/logs/infraestrutura-logs.md)
+- [Aplicação app-observability-lab: Logs](docs/logs/aplicacao-go-logs.md)
+
+### Métricas
+
+- [Infraestrutura de Métricas](docs/metrics/infraestrutura-metricas.md)
+- [Aplicação app-observability-lab: Métricas](docs/metrics/aplicacao-go-metricas.md)
+
+### Traces
+
+- Infraestrutura de Traces: será criada em uma etapa futura.
+- [Aplicação app-observability-lab: Tracing](docs/traces/aplicacao-go-traces.md)
