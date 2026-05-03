@@ -198,6 +198,8 @@ http://localhost:9090
 
 Em `Status > Target health`, o target `app-observability-lab` deve aparecer como `UP`.
 
+Essa tela é o primeiro ponto de validação da coleta antes de montar consultas ou dashboards no Grafana.
+
 ## Gerar Métricas de Teste
 
 Execute:
