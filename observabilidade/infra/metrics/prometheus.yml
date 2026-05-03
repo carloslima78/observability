@@ -1,0 +1,11 @@
+# Configuracao principal do Prometheus para o laboratorio de metricas.
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  # O Prometheus acessa a aplicacao pela rede interna do Docker Compose.
+  - job_name: app-observability-lab
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - app-observability-lab:8080

@@ -1,0 +1,63 @@
+services:
+  loki:
+    image: grafana/loki:3.5.3
+    container_name: loki
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./infra/logs/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+
+  promtail:
+    image: grafana/promtail:3.5.3
+    container_name: promtail
+    command: -config.file=/etc/promtail/config.yaml
+    volumes:
+      - ./infra/logs/promtail-config.yaml:/etc/promtail/config.yaml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - loki
+
+  grafana:
+    image: grafana/grafana:12.1.1
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./infra/metrics/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+    depends_on:
+      - loki
+      - prometheus
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    container_name: prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/metrics/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    depends_on:
+      - app-observability-lab
+
+  app-observability-lab:
+    build:
+      context: ./apps/app-observability-lab
+    container_name: app-observability-lab
+    ports:
+      - "8080:8080"
+    depends_on:
+      - promtail
+
+volumes:
+  grafana-data:
+  loki-data:
+  prometheus-data:

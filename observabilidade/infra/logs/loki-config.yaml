@@ -1,0 +1,67 @@
+# Desativa autenticacao para simplificar o laboratorio local.
+auth_enabled: false
+
+# Configuracao do servidor HTTP do Loki.
+server:
+  # Porta onde o Loki recebe consultas e ingestao de logs.
+  http_listen_port: 3100
+
+# Configuracoes comuns usadas pelos componentes internos do Loki.
+common:
+  # Diretorio base usado pelo Loki dentro do container.
+  path_prefix: /loki
+  # Em laboratorio local usamos uma unica replica.
+  replication_factor: 1
+  # Ring coordena componentes do Loki. Em modo local, memoria basta.
+  ring:
+    kvstore:
+      store: inmemory
+  # Armazenamento local dos dados do Loki.
+  storage:
+    filesystem:
+      # Onde os blocos/chunks de logs ficam gravados.
+      chunks_directory: /loki/chunks
+      # Onde regras do ruler ficam gravadas.
+      rules_directory: /loki/rules
+
+# Define como os logs e indices serao organizados no armazenamento.
+schema_config:
+  configs:
+    # Data inicial a partir da qual este schema passa a valer.
+    - from: 2024-04-01
+      # TSDB e o formato atual recomendado para indexacao no Loki.
+      store: tsdb
+      # Neste ambiente local, os objetos ficam no filesystem.
+      object_store: filesystem
+      # Versao do schema usada pelo Loki.
+      schema: v13
+      index:
+        # Prefixo usado nos arquivos/indices criados pelo Loki.
+        prefix: index_
+        # Periodicidade de criacao dos indices.
+        period: 24h
+
+# Limites e funcionalidades extras do Loki.
+limits_config:
+  # Permite metadados estruturados nos logs.
+  allow_structured_metadata: true
+  # Habilita consultas de volume de logs.
+  volume_enabled: true
+
+# Ruler permite criar regras/alertas baseados em consultas LogQL.
+ruler:
+  # Armazena regras localmente no container.
+  storage:
+    type: local
+    local:
+      directory: /loki/rules
+  # Diretorio temporario usado pelo ruler.
+  rule_path: /loki/rules-temp
+  # URL de Alertmanager. No laboratorio nao subimos Alertmanager, fica apenas como referencia.
+  alertmanager_url: http://localhost:9093
+  # Ring local em memoria para o ruler.
+  ring:
+    kvstore:
+      store: inmemory
+  # Habilita API do ruler.
+  enable_api: true

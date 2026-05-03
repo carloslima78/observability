@@ -1,0 +1,46 @@
+# Configuracao do servidor interno do Promtail.
+server:
+  # Porta HTTP para status/metricas do Promtail.
+  http_listen_port: 9080
+  # Desativa gRPC porque nao precisamos dele neste laboratorio.
+  grpc_listen_port: 0
+
+# Arquivo onde o Promtail salva ate onde ja leu cada log.
+# Isso evita reler tudo do inicio ao reiniciar.
+positions:
+  filename: /tmp/positions.yaml
+
+# Destinos para onde o Promtail envia os logs coletados.
+clients:
+  # Endpoint interno do Loki dentro da rede do Docker Compose.
+  - url: http://loki:3100/loki/api/v1/push
+
+# Regras de coleta de logs.
+scrape_configs:
+  # Nome do job. Esta label aparece como job="docker" no Grafana/Loki.
+  - job_name: docker
+    # Descobre containers Docker usando o socket do Docker.
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        # Frequencia com que o Promtail procura containers novos/removidos.
+        refresh_interval: 5s
+    # Etapas aplicadas ao log antes de enviar ao Loki.
+    pipeline_stages:
+      # Interpreta o formato JSON dos logs gravados pelo Docker.
+      - docker: {}
+    # Transforma metadados descobertos do Docker em labels do Loki.
+    relabel_configs:
+      # Define o caminho do arquivo de log real de cada container no host Docker.
+      - source_labels: ["__meta_docker_container_id"]
+        target_label: "__path__"
+        replacement: "/var/lib/docker/containers/$1/$1-json.log"
+      # Cria a label container com o nome do container, removendo a barra inicial.
+      - source_labels: ["__meta_docker_container_name"]
+        regex: "/(.*)"
+        target_label: "container"
+      # Cria a label stream indicando stdout ou stderr.
+      - source_labels: ["__meta_docker_container_log_stream"]
+        target_label: "stream"
+      # Cria a label compose_service com o nome do servico no docker-compose.yml.
+      - source_labels: ["__meta_docker_container_label_com_docker_compose_service"]
+        target_label: "compose_service"
