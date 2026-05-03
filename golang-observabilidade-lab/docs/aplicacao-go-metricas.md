@@ -1,6 +1,8 @@
 # Aplicação app-observability-lab: Métricas
 
-Este guia cobre a primeira versão do pilar de métricas usando Prometheus e Grafana.
+Este guia explica como a aplicação `app-observability-lab` foi instrumentada para expor métricas.
+
+A infraestrutura com Docker Compose, Prometheus e Grafana está descrita em [Infraestrutura de Métricas](infraestrutura-metricas.md).
 
 ## Conceito SRE
 
@@ -17,12 +19,11 @@ Diferente de logs, que contam eventos individuais, métricas criam séries tempo
 
 ```text
 Aplicação Go
+  -> instrumentação no controller
   -> GET /metrics
-  -> Prometheus
-  -> Grafana
 ```
 
-Neste modelo, a aplicação não envia métricas para o Prometheus. Ela expõe o endpoint `/metrics`, e o Prometheus coleta periodicamente.
+A aplicação não envia métricas diretamente para o Prometheus. Ela mantém os valores em memória e expõe o endpoint `/metrics`.
 
 Diagrama de sequência:
 
@@ -30,23 +31,22 @@ Diagrama de sequência:
 sequenceDiagram
     participant Usuario as Usuario ou script de teste
     participant App as app-observability-lab
-    participant Metrics as Endpoint /metrics
-    participant Prometheus
-    participant Grafana
+    participant Controller as controller de metricas
+    participant Metrics as GET /metrics
 
     Usuario->>App: GET /metrics/error/500
-    App->>App: Incrementa app_http_requests_total
-    App->>App: Incrementa app_http_errors_total
+    App->>Controller: Executa rota simulada
+    Controller->>Controller: Incrementa app_http_requests_total
+    Controller->>Controller: Incrementa app_http_errors_total
     App-->>Usuario: HTTP 500 simulado
 
     Usuario->>App: GET /metrics/latency?seconds=0.5
-    App->>App: Observa duracao no Histogram
+    App->>Controller: Executa rota com atraso artificial
+    Controller->>Controller: Observa duracao no Histogram
     App-->>Usuario: HTTP 200 com latencia simulada
 
-    Prometheus->>Metrics: GET /metrics a cada 5s
-    Metrics-->>Prometheus: Series temporais em formato Prometheus
-    Grafana->>Prometheus: Consulta PromQL
-    Prometheus-->>Grafana: Dados para paineis e graficos
+    Usuario->>Metrics: GET /metrics
+    Metrics-->>Usuario: Metricas em formato Prometheus
 ```
 
 ## Tipos de Métrica
@@ -82,9 +82,6 @@ app_http_request_duration_seconds
 ## Arquivos
 
 - `apps/app-observability-lab/controllers/metrics.go`: registra métricas customizadas, expõe `/metrics` e cria rotas de simulação.
-- `infra/metrics/prometheus.yml`: configura o Prometheus para coletar métricas da aplicação.
-- `infra/metrics/grafana-datasources.yaml`: provisiona os datasources Loki e Prometheus no Grafana.
-- `docker-compose.yml`: sobe Prometheus junto com a stack já existente.
 - `scripts/generate-requests.sh`: gera requisições recorrentes para alimentar as métricas.
 
 Resumo da estrutura:
@@ -95,14 +92,6 @@ apps/app-observability-lab/controllers/metrics.go
   -> registra as metricas com prometheus.MustRegister
   -> expoe GET /metrics com promhttp.Handler
   -> cria rotas didaticas para latencia, erros e pedidos
-
-infra/metrics/prometheus.yml
-  -> informa ao Prometheus onde coletar metricas
-  -> aponta para app-observability-lab:8080 dentro do Docker Compose
-
-infra/metrics/grafana-datasources.yaml
-  -> cadastra Loki para logs
-  -> cadastra Prometheus para metricas
 
 scripts/generate-requests.sh
   -> chama rotas de erro, latencia e pedidos em loop
@@ -174,31 +163,6 @@ Incrementa o contador de pedidos simulados.
 ```bash
 curl -X POST "http://localhost:8080/metrics/orders"
 ```
-
-## Prometheus
-
-O arquivo `infra/metrics/prometheus.yml` define:
-
-- `scrape_interval: 5s`: frequência de coleta.
-- `job_name: app-observability-lab`: nome do alvo no Prometheus.
-- `metrics_path: /metrics`: rota de coleta.
-- `targets: app-observability-lab:8080`: endereço da aplicação dentro da rede Docker Compose.
-
-Suba a stack:
-
-```bash
-docker compose up -d --build
-```
-
-Acesse o Prometheus:
-
-```text
-http://localhost:9090
-```
-
-Em `Status > Target health`, o target `app-observability-lab` deve aparecer como `UP`.
-
-Essa tela é o primeiro ponto de validação da coleta antes de montar consultas ou dashboards no Grafana.
 
 ## Gerar Métricas de Teste
 
@@ -296,34 +260,6 @@ go_memstats_alloc_bytes
 process_cpu_seconds_total
 process_resident_memory_bytes
 ```
-
-## Dashboard no Grafana
-
-Acesse:
-
-```text
-http://localhost:3000
-```
-
-Credenciais:
-
-```text
-Usuário: admin
-Senha: admin
-```
-
-O datasource `Prometheus` é provisionado automaticamente.
-
-Sugestão de painéis:
-
-- **Requests por segundo**: `sum(rate(app_http_requests_total[1m]))`
-- **Erros por status**: `sum by (status) (rate(app_http_errors_total[1m]))`
-- **% HTTP 500**: `100 * sum(rate(app_http_errors_total{status="500"}[1m])) / sum(rate(app_http_requests_total[1m]))`
-- **Latência p95**: `histogram_quantile(0.95, sum by (le) (rate(app_http_request_duration_seconds_bucket[5m])))`
-- **Latência p95 por rota**: `histogram_quantile(0.95, sum by (route, le) (rate(app_http_request_duration_seconds_bucket[5m])))`
-- **Requisições ativas**: `app_http_active_requests`
-- **Pedidos por minuto**: `sum(rate(app_orders_created_total[1m])) * 60`
-- **Goroutines Go**: `go_goroutines`
 
 ## Cardinalidade
 

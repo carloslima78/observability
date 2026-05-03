@@ -112,5 +112,6 @@ Aplicação
 
 - [Infraestrutura de Logs](docs/infraestrutura-logs.md)
 - [Aplicação app-observability-lab: Logs](docs/aplicacao-go-logs.md)
+- [Infraestrutura de Métricas](docs/infraestrutura-metricas.md)
 - [Aplicação app-observability-lab: Métricas](docs/aplicacao-go-metricas.md)
 - [Aplicação app-observability-lab: Tracing](docs/aplicacao-go-traces.md)
