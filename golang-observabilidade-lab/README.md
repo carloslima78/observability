@@ -1,4 +1,4 @@
-# Estudo de Observabilidade
+# Laboratório Go de Observabilidade
 
 Este repositório reúne anotações e exemplos práticos para estudar observabilidade.
 
