@@ -81,13 +81,13 @@ app_http_request_duration_seconds
 
 ## Arquivos
 
-- `apps/app-observability-lab/controllers/metrics.go`: registra métricas customizadas, expõe `/metrics` e cria rotas de simulação.
+- `app/controllers/metrics.go`: registra métricas customizadas, expõe `/metrics` e cria rotas de simulação.
 - `scripts/generate-requests.sh`: gera requisições recorrentes para alimentar as métricas.
 
 Resumo da estrutura:
 
 ```text
-apps/app-observability-lab/controllers/metrics.go
+app/controllers/metrics.go
   -> cria Counters, Gauge e Histogram
   -> registra as metricas com prometheus.MustRegister
   -> expoe GET /metrics com promhttp.Handler
@@ -166,10 +166,16 @@ curl -X POST "http://localhost:8080/metrics/orders"
 
 ## Gerar Métricas de Teste
 
-Execute:
+Execute a partir da raiz do laboratório, onde está o `docker-compose.yml`:
 
 ```bash
 ./scripts/generate-requests.sh
+```
+
+Se o arquivo não tiver permissão de execução:
+
+```bash
+chmod +x ./scripts/generate-requests.sh
 ```
 
 Parâmetros:
@@ -183,6 +189,21 @@ BASE_URL="http://localhost:8080" ERROR_CODES="500 503 404" ./scripts/generate-re
 ```
 
 Este script não é um DDoS. Ele apenas gera requisições recorrentes para estudo local.
+
+Para parar o script, use `Ctrl+C`.
+
+## Golden Signals no Laboratório
+
+Os Golden Signals ajudam a observar o comportamento de um serviço a partir de quatro perguntas práticas.
+
+| Golden Signal | Onde testar | Métrica principal | O que observar |
+| --- | --- | --- | --- |
+| Traffic | `GET /metrics/demo`, `POST /metrics/orders` e script `generate-requests.sh` | `app_http_requests_total` | volume de requisições por rota, método e status |
+| Errors | `GET /metrics/error/:status` | `app_http_errors_total` | quantidade, taxa e percentual de erros HTTP |
+| Latency | `GET /metrics/latency?seconds=0.3` | `app_http_request_duration_seconds` | distribuição de duração e percentis como p95 |
+| Saturation | `GET /metrics` e métricas padrão Go/processo | `app_http_active_requests`, `go_goroutines`, `process_resident_memory_bytes` | sinais simples de uso atual e pressão no processo |
+
+Nesta etapa, a saturação ainda é introdutória. A aplicação expõe um Gauge de requisições ativas e métricas padrão do Go, mas ainda não simula CPU, memória, fila ou conexão com banco. Isso fica como evolução natural para os próximos módulos.
 
 ## Consultas PromQL
 
@@ -228,10 +249,24 @@ Percentual de respostas 4xx:
 100 * sum(rate(app_http_errors_total{status=~"4.."}[1m])) / sum(rate(app_http_requests_total[1m]))
 ```
 
-Latência p95:
+Percentis de latência ajudam a entender a experiência dos usuários sem depender apenas de média.
+
+Latência p50, também chamada de mediana. Mostra o tempo abaixo do qual 50% das requisições ficaram:
+
+```promql
+histogram_quantile(0.50, sum by (le) (rate(app_http_request_duration_seconds_bucket[5m])))
+```
+
+Latência p95. Mostra o tempo abaixo do qual 95% das requisições ficaram. É útil para observar degradação sentida por uma parte menor, mas ainda relevante, dos usuários:
 
 ```promql
 histogram_quantile(0.95, sum by (le) (rate(app_http_request_duration_seconds_bucket[5m])))
+```
+
+Latência p99. Mostra o tempo abaixo do qual 99% das requisições ficaram. Ajuda a investigar cauda longa, ou seja, os casos mais lentos:
+
+```promql
+histogram_quantile(0.99, sum by (le) (rate(app_http_request_duration_seconds_bucket[5m])))
 ```
 
 Latência p95 por rota:

@@ -50,7 +50,7 @@ services:
 
   app-observability-lab:
     build:
-      context: ./apps/app-observability-lab
+      context: ./app
     container_name: app-observability-lab
     ports:
       - "8080:8080"

@@ -9,7 +9,7 @@ A infraestrutura completa com Docker Compose, Promtail, Loki e Grafana está des
 A aplicação fica em:
 
 ```text
-apps/app-observability-lab
+app
 ```
 
 Ela usa **Gin** para expor rotas HTTP simples e escreve logs em `stdout`, que é a saída padrão do processo.
@@ -29,9 +29,9 @@ Ou seja: a aplicação não envia logs diretamente para o Loki. Ela apenas escre
 
 ## Arquivos Principais
 
-- `apps/app-observability-lab/main.go`: app HTTP com Gin que gera logs.
-- `apps/app-observability-lab/go.mod`: dependências da aplicação, incluindo Gin.
-- `apps/app-observability-lab/Dockerfile`: empacota a aplicação em imagem Docker.
+- `app/main.go`: app HTTP com Gin que gera logs.
+- `app/go.mod`: dependências da aplicação, incluindo Gin.
+- `app/Dockerfile`: empacota a aplicação em imagem Docker.
 - `docker-compose.yml`: executa a aplicação junto com Grafana, Loki e Promtail.
 
 Os arquivos em `infra/logs/` não fazem parte da instrumentação da aplicação. Eles configuram a infraestrutura que coleta, armazena e visualiza os logs:

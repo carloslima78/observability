@@ -38,7 +38,7 @@ Paralelo: em uma aplicação **Spring Boot**, seria a aplicação escrevendo log
 - `infra/logs/loki-config.yaml`: configura o Loki.
 - `infra/logs/promtail-config.yaml`: configura a coleta de logs dos containers Docker.
 - `infra/metrics/grafana-datasources.yaml`: provisiona os Data Sources Loki e Prometheus no Grafana.
-- `apps/app-observability-lab/Dockerfile`: gera a imagem da aplicação de teste.
+- `app/Dockerfile`: gera a imagem da aplicação de teste.
 
 ## Arquivos de Configuração
 

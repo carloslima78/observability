@@ -5,7 +5,7 @@ Este guia será usado no futuro módulo de tracing.
 A aplicação já possui um controller reservado para este pilar:
 
 ```text
-apps/app-observability-lab/controllers/tracing.go
+app/controllers/tracing.go
 ```
 
 Rota provisória:

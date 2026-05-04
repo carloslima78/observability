@@ -30,7 +30,7 @@ Paralelo: lembra dashboards operacionais usados para acompanhar taxa de erro, la
 - `docker-compose.yml`: sobe Prometheus junto com a stack do laboratório.
 - `infra/metrics/prometheus.yml`: configura o Prometheus para coletar métricas da aplicação.
 - `infra/metrics/grafana-datasources.yaml`: provisiona os Data Sources Loki e Prometheus no Grafana.
-- `apps/app-observability-lab/controllers/metrics.go`: expõe o endpoint `/metrics` usado pelo Prometheus.
+- `app/controllers/metrics.go`: expõe o endpoint `/metrics` usado pelo Prometheus.
 
 ## Arquivos de Configuração
 
