@@ -97,14 +97,16 @@ Aplicação
 
 ### Traces
 
-Traces serão estudados em uma etapa futura.
+Traces mostram o caminho de uma requisição por etapas chamadas spans.
+
+No laboratório atual, a aplicação Go gera spans com OpenTelemetry, envia para o Tempo e o Grafana permite visualizar a árvore do trace.
 
 Fluxo esperado:
 
 ```text
 Aplicação
   -> OpenTelemetry
-  -> Tempo ou Jaeger
+  -> Tempo
   -> Grafana
 ```
 
@@ -122,5 +124,5 @@ Aplicação
 
 ### Traces
 
-- Infraestrutura de Traces: será criada em uma etapa futura.
+- [Infraestrutura de Traces](docs/traces/infraestrutura-traces.md)
 - [Aplicação app-observability-lab: Tracing](docs/traces/aplicacao-go-traces.md)

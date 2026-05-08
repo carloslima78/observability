@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
@@ -14,7 +15,16 @@ func main() {
 	log.SetOutput(os.Stdout)
 	log.SetFlags(log.LstdFlags | log.LUTC)
 
+	finalizarTracing, err := controllers.ConfigurarTracing(context.Background())
+	if err != nil {
+		log.Printf("level=error msg=%q", "falha ao configurar tracing")
+	} else {
+		defer finalizarTracing(context.Background())
+	}
+
 	servidor := gin.Default()
+
+	controllers.UsarTracing(servidor)
 
 	controllers.RegistrarRotasDeMetricas(servidor)
 	controllers.RegistrarRotasDeLogs(servidor)

@@ -34,6 +34,7 @@ services:
     depends_on:
       - loki
       - prometheus
+      - tempo
 
   prometheus:
     image: prom/prometheus:v3.5.0
@@ -48,16 +49,32 @@ services:
     depends_on:
       - app-observability-lab
 
+  tempo:
+    image: grafana/tempo:2.8.2
+    container_name: tempo
+    command: -config.file=/etc/tempo/tempo.yaml
+    ports:
+      - "3200:3200"
+      - "6831:6831/udp"
+    volumes:
+      - ./infra/traces/tempo-config.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo-data:/var/tempo
+
   app-observability-lab:
     build:
       context: ./app
     container_name: app-observability-lab
     ports:
       - "8080:8080"
+    environment:
+      OTEL_EXPORTER_JAEGER_AGENT_HOST: tempo
+      OTEL_EXPORTER_JAEGER_AGENT_PORT: 6831
     depends_on:
       - promtail
+      - tempo
 
 volumes:
   grafana-data:
   loki-data:
   prometheus-data:
+  tempo-data:
